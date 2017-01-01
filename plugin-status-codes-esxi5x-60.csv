@@ -1,0 +1,11 @@
+"Code","Description"
+"0x0","No error."
+"0x1","An unspecified error occurred. Note: The I/O cmd should be tried."
+"0x2","The device is a deactivated snapshot. Note: The I/O cmd failed because the device is a deactivated snapshot and so the LUN is read-only."
+"0x3","SCSI-2 reservation was lost."
+"0x4","The plug-in wants to requeue the I/O back. Note: The I/O will be retried."
+"0x5","The test and set data in the ATS request returned false for equality."
+"0x6","Allocating more thin provision space. Device server is in the process of allocating more space in the backing pool for a thin provisioned LUN."
+"0x7","Thin provisioning soft-limit exceeded."
+"0x8","Backing pool for thin provisioned LUN is out of space."
+
