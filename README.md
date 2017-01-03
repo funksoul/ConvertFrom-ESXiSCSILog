@@ -1,2 +1,2 @@
 # Decode-ESXiSCSILog
-Decode SCSI Sense Code from ESXi vmkernel.log
+A PowerShell Module decodes SCSI Sense Code from ESXi vmkernel.log
