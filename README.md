@@ -1,2 +1,2 @@
-# Decode-ESXiSCSILog
-Decode SCSI Sense Code from ESXi vmkernel.log
+# ConvertFrom-ESXiSCSILog
+A PowerShell Module converts SCSI Sense Code from ESXi vmkernel.log to human readable format
