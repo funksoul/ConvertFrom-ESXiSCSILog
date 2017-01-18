@@ -11,7 +11,7 @@ readable format
 3.  Check if the PowerShell recognizes the module properly.
 4.  Load the module (yay)
 
-`PS C:\\\> \$env:PSModulePath -split ';'`
-`C:\\Users\\Foo\\Documents\\WindowsPowerShell\\Modules\\ConvertFrom-ESXiSCSILog`
-`PS C:\\\> Get-Module -ListAvailable ConvertFrom-ESXiSCSILog`
-`PS C:\\\> Import-Module ConvertFrom-ESXiSCSILog`
+`PS C:\> \$env:PSModulePath -split ';'`  
+`C:\Users\Foo\Documents\WindowsPowerShell\Modules\ConvertFrom-ESXiSCSILog`  
+`PS C:\> Get-Module -ListAvailable ConvertFrom-ESXiSCSILog`  
+`PS C:\> Import-Module ConvertFrom-ESXiSCSILog`  
