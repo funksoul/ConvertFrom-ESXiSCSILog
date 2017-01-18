@@ -87,3 +87,7 @@ _`C:\Users\Foo\Documents\WindowsPowerShell\Modules\ConvertFrom-ESXiSCSILog`_
 
 `=== Sample Output ===`  
 `MISCOMPARE DURING VERIFY OPERATION`  
+
+###Etc###
+
+* An UTC timestamp field of vmkernel.log entry is converted to DateTime object and displayed in localtime.
