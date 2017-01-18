@@ -79,3 +79,11 @@ _`C:\Users\Foo\Documents\WindowsPowerShell\Modules\ConvertFrom-ESXiSCSILog`_
 * Translate from 2017/01/01 (to now)
 
 `PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com -Start 2017/01/01`  
+
+
+* Translate a SCSI Sense Data
+
+`PS C:\> ConvertFrom-SCSICode -CodeType SenseData -Value '0x1d/0x0'`  
+
+`=== Sample Output ===`  
+`MISCOMPARE DURING VERIFY OPERATION`  
