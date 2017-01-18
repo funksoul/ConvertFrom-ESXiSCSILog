@@ -83,7 +83,7 @@ _`C:\Users\Foo\Documents\WindowsPowerShell\Modules\ConvertFrom-ESXiSCSILog`_
 
 * Translate a SCSI Sense Data
 
-`PS C:\> ConvertFrom-SCSICode -CodeType SenseData -Value '0x1d 0x0'`  
+`PS C:\> ConvertFrom-SCSICode -CodeType SenseData -Value '0x1d/0x0'`  
 
 `=== Sample Output ===`  
 `MISCOMPARE DURING VERIFY OPERATION`  
