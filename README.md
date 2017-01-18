@@ -18,7 +18,7 @@ readable format
 
 ###Usage###
 
-***Using default parameters (Translate SCSI Codes only)***
+* Using default parameters (Translate SCSI Codes only)
 
 `PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog`  
 
@@ -37,7 +37,7 @@ readable format
 `Action     : NONE`  
 
 
-***Translate SCSI Codes and ESXi Host Data***
+* Translate SCSI Codes and ESXi Host Data
 
 `PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com`  
 
@@ -56,7 +56,7 @@ readable format
 `Action     : NONE`  
 
 
-***Output both of raw and translated data***
+* Output both of raw and translated data
 
 `PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -OutFormat Combined -Resolve -Server vmhost.example.com`  
 
@@ -75,6 +75,6 @@ readable format
 `Action     :`  
 
 
-***Translate from 2017/01/01 (to now)***
+* Translate from 2017/01/01 (to now)
 
 `PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com -Start 2017/01/01`  
