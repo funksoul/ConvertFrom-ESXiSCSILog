@@ -12,7 +12,7 @@ For more information, please consult the help page of each Cmdlet.
 3. Check if the module loaded correctly
 
 ```powershell
-PS C:\> Get-Module Search-VMwareKB
+PS C:\> Get-Module ConvertFrom-ESXiSCSILog
 
 ModuleType Version    Name                                ExportedCommands
 ---------- -------    ----                                ----------------
