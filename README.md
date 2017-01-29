@@ -7,16 +7,17 @@ For more information, please consult the help page of each Cmdlet.
 
 ###Installation###
 
-1.  Download repo as .zip file and extract it to your preferred PowerShell module path.
-2.  Remove extra suffix from the folder name. (-master, -devel, ..etc)
-3.  Check if the PowerShell recognizes the module properly.
-4.  Load the module (yay)
+1. Download repo as .zip file and extract it.
+2. Change location to the extracted folder and run the installer (.\Install.ps1)
+3. Check if the module loaded correctly
 
-`PS C:\> $env:PSModulePath -split ';'`  
-_`C:\Users\Foo\Documents\WindowsPowerShell\Modules\ConvertFrom-ESXiSCSILog`_  
-`PS C:\> Get-Module -ListAvailable ConvertFrom-ESXiSCSILog`  
-`PS C:\> Import-Module ConvertFrom-ESXiSCSILog`  
+```powershell
+PS C:\> Get-Module Search-VMwareKB
 
+ModuleType Version    Name                                ExportedCommands
+---------- -------    ----                                ----------------
+Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSILog, ConvertFrom-SCSICode}
+```
 ###Usage###
 
 * Using default parameters (Translate SCSI Codes only)
