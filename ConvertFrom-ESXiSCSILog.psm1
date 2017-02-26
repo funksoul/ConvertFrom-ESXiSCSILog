@@ -310,7 +310,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row."HostCode" = $hoststatuscodes.($str_tmp[14] -replace "^H:","")
                         $row."DeviceCode" = $devstatuscodes.($str_tmp[15] -replace "^D:","")
                         $row."PlugInCode" = $pluginstatuscodes.($str_tmp[16] -replace "^P:","")
-                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -eq "Valid") ) {
+                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -in "Valid","Possible") ) {
                             $row."SenseKey" = $sensekeys.($str_tmp[20])
                             $row."SenseData" = $sensedata.($str_tmp[21] + "/" + ($str_tmp[22] -replace "\.$",""))
                         }
@@ -339,6 +339,9 @@ Function ConvertFrom-ESXiSCSILog {
                         $scsilun = $str_tmp[12] -replace "`"",""
                         if (($Resolve -eq $true) -and ($resolved -eq $true) -and ($scsiluns.$scsilun -ne $null)) {
                             $row."DeviceTo" = $scsiluns.$scsilun
+                            if ($vmfsextents.$scsilun -ne $null) {
+                                $row."DeviceTo" += " (" + ($vmfsextents.$scsilun -split " ")[-1] + ")"
+                            }
                         } else {
                             $row."DeviceTo" = $scsilun
                         }
@@ -346,7 +349,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row."DeviceCode" = $devstatuscodes.($str_tmp[15] -replace "^D:","")
                         $row."PlugInCode" = $pluginstatuscodes.($str_tmp[16] -replace "^P:","")
 
-                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -eq "Valid") ) {
+                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -in "Valid","Possible") ) {
                             $row."SenseKey" = $sensekeys.($str_tmp[20])
                             $row."SenseData" = $sensedata.($str_tmp[21] + "/" + ($str_tmp[22] -replace "\.$",""))
                         }
