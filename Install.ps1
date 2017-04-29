@@ -37,15 +37,16 @@ if (-not (Test-Path $Dest)) {
     Unblock-File (Join-Path -Path $Dest -ChildPath '*') -Confirm:$true
 
     Write-Host "Module installed to `"$Dest`" successfully."
+
+    # (Re)Load the module
+    if (Get-Module $ModuleName) {
+        Write-Host "Removing current module `"$ModuleName`".."
+        Remove-Module $ModuleName
+    }
+
+    Write-Host "Importing module `"$ModuleName`".."
+    Import-Module $ModuleName
 }
 else {
     Write-Host -ForegroundColor red "Destination folder `"$Dest`" exists. Please remove it and try again."
 }
-
-# (Re)Load the module
-if (Get-Module $ModuleName) {
-    Write-Host "Removing current module `"$ModuleName`".."
-    Remove-Module $ModuleName
-}
-Write-Host "Importing module `"$ModuleName`".."
-Import-Module $ModuleName
