@@ -6,19 +6,19 @@ Function ConvertFrom-ESXiSCSILog {
 <#
 .SYNOPSIS
     Converts SCSI Sense Code from ESXi vmkernel.log to human readable format
+
 .DESCRIPTION
     ESXi records details on failed SCSI I/Os to vmkernel.log in Raw form.
     This Cmdlet translates these details to human readable form as much as possible:
         - SCSI Codes
             . Based on T10 standard documents (http://www.t10.org)
-            . Cmd (Op-Code) / Host Code / Device Code / PlugIn Code / Sense Key / Sense Data
+            . Cmd (Operation Code) / Host Code / Device Code / PlugIn Code / Sense Key / Additional Sense Data
         - ESXi Host Data
             . Retrieved using PowerCLI Cmdlets
-            . World (Process) Id / Target Device Name / Datastore Name / HBA Name
+            . World (Process) Id / Target Device Name / Datastore Name / Storage Adapter Name
+
 .PARAMETER InputObject
     An array of strings which are read from vmkernel.log file.
-.PARAMETER OutFormat
-    Specifies output format. The valid choices are Raw, Decoded and Combined.
 .PARAMETER Resolve
     Determines whether translate ESXi Host Data or not.
     Used in conjunction with 'Server' parameter.
@@ -31,59 +31,68 @@ Function ConvertFrom-ESXiSCSILog {
     Specifies the start date of the log you want to retrieve. The valid formats depend on the local machine regional settings.
 .PARAMETER Finish
     Specifies the end date of the log you want to retrieve. The valid formats depend on the local machine regional settings.
+
 .EXAMPLE
     Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog
     Using default parameters (Translate SCSI Codes only)
 
     === Sample Output ===
-    Timestamp  : 2016-12-22 PM 1:01:01
-    LogType    : nmp_ThrottleLogForDevice
-    Cmd        : SERVICE ACTION IN(16)
-    WorldFrom  :
-    DeviceTo   : naa.50000f000b600d0b
-    OnPath     : vmhba2:C0:T0:L0
-    HostCode   : NO error
-    DeviceCode : CHECK CONDITION
-    PlugInCode : No error.
-    SenseKey   : ILLEGAL REQUEST
-    SenseData  : INVALID COMMAND OPERATION CODE
-    Action     : NONE
+    Id                   : 664
+    Timestamp            : 2017-02-08 AM 12:35:05
+    LogType              : nmp_ThrottleLogForDevice
+    Cmd                  : 0xf1
+    OperationCode        : ATOMIC TEST AND SET (EMC VMAX/VNX, IBM Storwize)
+    from_world           :
+    WorldName            :
+    to_dev               : naa.6006016006902c008d9626e54f85e111
+    DeviceName           : 
+    DatastoreName        : 
+    on_path              : vmhba3:C0:T1:L1
+    StorageAdapterName   : 
+    HostDevicePlugInCode : H:0x0 D:0x2 P:0x0
+    HostStatus           : NO error
+    DeviceStatus         : CHECK CONDITION
+    PlugInStatus         : No error.
+    SenseDataValidity    : Valid
+    SenseData            : 0xe 0x1d 0x0
+    SenseKey             : MISCOMPARE
+    AdditionalSenseData  : MISCOMPARE DURING VERIFY OPERATION
+    Action               : NONE
+
+    Id                   : 665
+    Timestamp            : 2017-02-08 AM 12:35:06
+    ...
 
 .EXAMPLE
     Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com
-    Translate SCSI Codes and ESXi Host Data
+    Translate SCSI Codes and ESXi Host Data (You need to be connected to a vCenter Server)
 
     === Sample Output ===
-    Timestamp  : 2016-12-22 PM 1:01:01
-    LogType    : nmp_ThrottleLogForDevice
-    Cmd        : SERVICE ACTION IN(16)
-    WorldFrom  :
-    DeviceTo   : ATA - SAMSUNG HE160HJ (LOCAL-COMPUTE01-01)
-    OnPath     : Dell SAS 5/iR Adapter / Ctlr 0 Tgt 0 LUN 0
-    HostCode   : NO error
-    DeviceCode : CHECK CONDITION
-    PlugInCode : No error.
-    SenseKey   : ILLEGAL REQUEST
-    SenseData  : INVALID COMMAND OPERATION CODE
-    Action     : NONE
+    Id                   : 664
+    Timestamp            : 2017-02-08 AM 12:35:05
+    LogType              : nmp_ThrottleLogForDevice
+    Cmd                  : 0xf1
+    OperationCode        : ATOMIC TEST AND SET (EMC VMAX/VNX, IBM Storwize)
+    from_world           :
+    WorldName            :
+    to_dev               : naa.6006016006902c008d9626e54f85e111
+    DeviceName           : DGC VRAID
+    DatastoreName        : VNX5100-01
+    on_path              : vmhba3:C0:T1:L1
+    StorageAdapterName   : QLogic Corp ISP2432-based 4Gb Fibre Channel to PCI Express HBA
+    HostDevicePlugInCode : H:0x0 D:0x2 P:0x0
+    HostStatus           : NO error
+    DeviceStatus         : CHECK CONDITION
+    PlugInStatus         : No error.
+    SenseDataValidity    : Valid
+    SenseData            : 0xe 0x1d 0x0
+    SenseKey             : MISCOMPARE
+    AdditionalSenseData  : MISCOMPARE DURING VERIFY OPERATION
+    Action               : NONE
 
-.EXAMPLE
-    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -OutFormat Combined -Resolve -Server vmhost.example.com
-    Output both of raw and translated data
-
-    === Sample Output ===
-    Timestamp  : 2016-12-22 AM 3:10:17
-    LogType    : ScsiDeviceIO
-    Cmd        : 0x89 COMPARE AND WRITE
-    WorldFrom  : 24822716 sdrsInjector
-    DeviceTo   : naa.6001405a6c5bb67b44c4af59a3466fcd LIO-ORG - disk01
-    OnPath     :
-    HostCode   : 0x0 NO error
-    DeviceCode : 0x2 CHECK CONDITION
-    PlugInCode : 0x0 No error.
-    SenseKey   : 0xe MISCOMPARE
-    SenseData  : 0x1d/0x0 MISCOMPARE DURING VERIFY OPERATION
-    Action     :
+    Id                   : 665
+    Timestamp            : 2017-02-08 AM 12:35:06
+    ...
 
 .EXAMPLE
     Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com -Start 2017/01/01
@@ -92,16 +101,15 @@ Function ConvertFrom-ESXiSCSILog {
 .NOTES
     Author                      : Han Ho-Sung
     Author email                : funksoul@insdata.co.kr
-    Version                     : 1.0
+    Version                     : 1.1
     Dependencies                : 
     ===Tested Against Environment====
-    ESXi Version                : 6.0.0
-    PowerCLI Version            : VMware PowerCLI 6.5 Release 1 build 4624819
-    PowerShell Version          : 5.1.14393.693
+    ESXi Version                : 6.0
+    PowerCLI Version            : VMware PowerCLI 6.5.2
+    PowerShell Version          : 5.1.15063.502
 #>
     Param (
         [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)][AllowEmptyString()][String[]]$InputObject,
-        [ValidateSet("Raw", "Decoded", "Combined")]$OutFormat = "Decoded",
         [Parameter(Mandatory=$false)][switch]$Resolve = $false,
         [Parameter(Mandatory=$false)][switch]$UseCache = $false,
         [Parameter(Mandatory=$false)][PSObject]$Server,
@@ -110,7 +118,6 @@ Function ConvertFrom-ESXiSCSILog {
     )
 
     Begin {
-        $vmkernellog = @()
         $result = @()
         $ModuleBase = Split-Path $script:MyInvocation.MyCommand.Path
 
@@ -119,39 +126,19 @@ Function ConvertFrom-ESXiSCSILog {
             $PSDefaultParameterValues.Add("Invoke-WebRequest:SkipCertificateCheck", $true)
         }
 
-        # Setup hash table value (will be used in ArrayToHash filter as an expression) according to the output format
-        Switch ($OutFormat) {
-            "Raw" {
-                $hashvalue = '$_.Code'
-                break
-            }
-            "Decoded" {
-                $hashvalue = '$_.Description'
-                break
-            }
-            "Combined" {
-                $hashvalue = '$_.Code + " " + $_.Description'
-                break
-            }
-        }
-
         # Convert array to hash table
         filter ArrayToHash {
             begin { $hash = @{} }
-            process { $hash[$_.Code] = Invoke-Expression $hashvalue }
+            process { $hash[$_.Code] = $_.Description }
             end { return $hash }
         }
 
-        # Contact VMHost in order to fetch details of World Ids, vmhbas, LUNs, LUN Paths and VMFS Datastore Extents
-        if ($Resolve -eq $true) {
-            if ($PSVersionTable.PSEdition -eq 'Desktop') {
-                $tmppath = $env:TMP
-            }
-            else {
-                $tmppath = "/tmp"
-            }
+        # Contact VMHost in order to fetch details of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents
+        if ($Resolve) {
+            if ($PSVersionTable.PSEdition -eq 'Desktop') { $tmppath = $Env:TMP }
+            else { $tmppath = "/tmp" }
 
-            if ($UseCache -eq $false) {
+            if (! $UseCache) {
                 Try {
                     # Object-by-Name (OBN) selection of VMHost
                     Switch ($Server.GetType().FullName) {
@@ -166,39 +153,23 @@ Function ConvertFrom-ESXiSCSILog {
                         }
                     }
 
-                    Write-Verbose "Fetching list of World IDs.."
+                    Write-Verbose "Fetching list of Worlds.."
                     $worldids = (Get-EsxCli -V2 -VMHost $VMHost).system.process.list.Invoke() | Select-Object @{Name="Code";Expression={$_.Id}}, @{Name="Description";Expression={$_.Name}}
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_worldids.csv")
-                    $worldids | Export-Csv -NoTypeInformation -Path $filename
+                    $worldids | Export-Csv -NoTypeInformation -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_worldids.csv"))
                     $worldids = $worldids | ArrayToHash
 
-                    Write-Verbose "Fetching list of vmhbas.."
+                    Write-Verbose "Fetching list of Storage Adapters.."
                     $vmhbas = Get-VMHostHba -VMHost $VMHost | Select-Object @{Name="Code";Expression={$_.Device}}, @{Name="Description";Expression={$_.Model}}
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_vmhbas.csv")
-                    $vmhbas | Export-Csv -NoTypeInformation -Path $filename
+                    $vmhbas | Export-Csv -NoTypeInformation -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_vmhbas.csv"))
                     $vmhbas = $vmhbas | ArrayToHash
 
+                    Write-Verbose "Fetching list of SCSI Devices.."
                     $scsiluns_tmp = Get-ScsiLun -VmHost $VMHost
-
-                    Write-Verbose "Fetching list of LUNs.."
                     $scsiluns = $scsiluns_tmp | Select-Object @{Name="Code";Expression={$_.CanonicalName}}, @{Name="Description";Expression={$_.Vendor + " - " + $_.Model}}
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_scsiluns.csv")
-                    $scsiluns | Export-Csv -NoTypeInformation -Path $filename
+                    $scsiluns | Export-Csv -NoTypeInformation -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_scsiluns.csv"))
                     $scsiluns = $scsiluns | ArrayToHash
 
-                    Write-Verbose "Fetching list of LUN Paths.."
-                    $scsilunpaths = Get-ScsiLunPath -ScsiLun $scsiluns_tmp | Select-Object @{Name="Code";Expression={$_.Name}}, @{Name="Description";Expression={ `
-                        ($vmhbas.(($_.Name -split ":")[0]) -replace "^vmhba\d{1,2} ","") + " /" + `
-                        " Ctlr " + $_.Name[-7] + `
-                        " Tgt " + $_.Name[-4] + `
-                        " LUN " + $_.Name[-1] `
-                        }
-                    }
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_scsilunpaths.csv")
-                    $scsilunpaths | Export-Csv -NoTypeInformation -Path $filename
-                    $scsilunpaths = $scsilunpaths | ArrayToHash
-
-                    Write-Verbose "Fetching VMFS Datastore Extents.."
+                    Write-Verbose "Fetching list of VMFS Datastore Extents.."
                     $vmfsextents = @()
                     Get-Datastore -RelatedObject $VMHost | %{ $_.ExtensionData.Info.Vmfs | Select-Object Extent, Name } | %{
                         $VmfsName = $_.Name
@@ -209,16 +180,16 @@ Function ConvertFrom-ESXiSCSILog {
                             $vmfsextents += $row
                         }
                     }
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_vmfsextents.csv")
-                    $vmfsextents | Export-Csv -NoTypeInformation -Path $filename
+                    $vmfsextents | Export-Csv -NoTypeInformation -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost.Name + "_vmfsextents.csv"))
                     $vmfsextents = $vmfsextents | ArrayToHash
 
                     $resolved = $true
                 }
                 Catch {
-                    Write-Host "Could not contact VMHost `"$Server`". Resolving DeviceTo/Path/WorldFrom would fail."
-                    Write-Verbose $_
+                    Write-Host "Could not contact VMHost `"$Server`". Resolving WorldName/DeviceName/DatastoreName/StorageAdapterName would fail."
+                    Write-Error $_
                     $VMHost = $Server
+
                     $resolved = $false
                 }
             }
@@ -236,22 +207,16 @@ Function ConvertFrom-ESXiSCSILog {
                         }
                     }
 
-                    Write-Verbose "Reading World Ids, vmhbas, LUNs and LUN Paths from cache.."
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_worldids.csv")
-                    $worldids = Import-Csv $filename | ArrayToHash
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_vmhbas.csv")
-                    $vmhbas = Import-Csv $filename | ArrayToHash
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_scsiluns.csv")
-                    $scsiluns = Import-Csv $filename | ArrayToHash
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_scsilunpaths.csv")
-                    $scsilunpaths = Import-Csv $filename | ArrayToHash
-                    $filename = Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_vmfsextents.csv")
-                    $vmfsextents = Import-Csv $filename | ArrayToHash
+                    Write-Verbose "Reading list of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents from cache.."
+                    $worldids = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_worldids.csv")) | ArrayToHash
+                    $vmhbas = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_vmhbas.csv")) | ArrayToHash
+                    $scsiluns = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_scsiluns.csv")) | ArrayToHash
+                    $vmfsextents = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_vmfsextents.csv")) | ArrayToHash
 
                     $resolved = $true
                 }
                 Catch {
-                    Write-Host "Reading World Ids, vmhbas, LUNs and LUN Paths from cache failed. Resolving DeviceTo/Path/WorldFrom would fail."
+                    Write-Host "Reading from cache failed. Resolving WorldName/DeviceName/StorageAdapterName would fail."
                     Write-Host "Please check ${tmppath}cache_${Server}_*.csv files."
                     Write-Verbose $_
                     $VMHost = $Server
@@ -266,100 +231,122 @@ Function ConvertFrom-ESXiSCSILog {
         $devstatuscodes = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'dev-status-codes.csv') | ArrayToHash
         $pluginstatuscodes = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'plugin-status-codes-esxi5x-60.csv') | ArrayToHash
         $sensekeys = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'sense-keys.csv') | ArrayToHash
-        $sensedata = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'asc-num.csv') | ArrayToHash
+        $additionalsensedata = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'asc-num.csv') | ArrayToHash
+
+        $id = 0
     }
 
     Process {
         # Put string[] object to pipeline at once
-        $vmkernellog += $InputObject
-    }
-
-    End {
-        $result = @()
-        $vmkernellog | ForEach-Object {
-
+        $InputObject -split "`n" | ForEach-Object {
             # Pickup log entry which has SCSI status and sense information
             Switch -Regex ($_) {
-
-                # NMP throttle log for device
-                "cpu\d+:\d+\)NMP:\ nmp_ThrottleLogForDevice:\d+:\ Cmd" {
-                    $str_tmp = $_ -split " "
-                    $timestamp = [datetime]$str_tmp[0]
-
+                # NMP throttled log for device
+                "cpu\d+:\d+.*\)NMP:\ nmp_ThrottleLogForDevice:\d+:\ Cmd" {
                     # Process only if the log entry is in valid time range
+                    $timestamp = [DateTime]($_ -split " ")[0]
                     if ( ($timestamp -ge $Start) -and ($timestamp -le $Finish) ) {
-                        $row = "" | Select-Object "Timestamp", "LogType", "Cmd", "WorldFrom", "DeviceTo", "OnPath", "HostCode", "DeviceCode", "PlugInCode", "SenseKey", "SenseData", "Action"
-                        $row."Timestamp" = [datetime]$str_tmp[0]
-                        $row."LogType" = "nmp_ThrottleLogForDevice"
-                        $row."Cmd" = $opnums.($str_tmp[4])
-                        $scsilun = $str_tmp[9] -replace "`"",""
-                        if (($Resolve -eq $true) -and ($resolved -eq $true) -and ($scsiluns.$scsilun -ne $null)) {
-                            $row."DeviceTo" = $scsiluns.$scsilun
-                            if ($vmfsextents.$scsilun -ne $null) {
-                                $row."DeviceTo" += " (" + ($vmfsextents.$scsilun -split " ")[-1] + ")"
-                            }
-                        } else {
-                            $row."DeviceTo" = $scsilun
+                        $parsed_data = @{
+                            "Cmd" = (($_ -split "Cmd ")[1] -split " ")[0]
+                            "to_dev" = (($_ -split "to dev ")[1] -split " ")[0] -replace "`"",""
+                            "on_path" = (($_ -split "on path ")[1] -split " ")[0] -replace "`"",""
+                            "HostDevicePlugInCode" = ([regex]"H:\d+x\d+ D:\d+x\d+ P:\d+x\d+").Match($_).Value
+                            "SenseDataValidity" = (($_ -split " sense data:")[0] -split " ")[-1]
+                            "SenseData" = ([regex]"sense data: 0x[0-9a-f]+ 0x[0-9a-f]+ 0x[0-9a-f]+").Match($_).Value -replace "sense data: ",""
+                            "Action" = ($_ -split "Act:")[1]
                         }
-                        $scsilunpath = $str_tmp[12] -replace "`"",""
-                        if (($Resolve -eq $true) -and ($resolved -eq $true) -and ($scsilunpaths.$scsilunpath -ne $null)) {
-                            $row."OnPath" = $scsilunpaths.$scsilunpath
-                        } else {
-                            $row."OnPath" = $scsilunpath
+
+                        $row = "" | Select-Object "Id", "Timestamp", "LogType", "Cmd", "OperationCode", "from_world", "WorldName", "to_dev", "DeviceName", "DatastoreName", "on_path", "StorageAdapterName", "HostDevicePlugInCode", "HostStatus", "DeviceStatus", "PlugInStatus", "SenseDataValidity", "SenseData", "SenseKey", "AdditionalSenseData", "Action"
+                        $row.Id = $id++
+                        $row.Timestamp = $timestamp
+                        $row.LogType = "nmp_ThrottleLogForDevice"
+
+                        $row.Cmd = $parsed_data.Cmd
+                        $row.OperationCode = $opnums.("{0:X2}" -f [Int]$parsed_data.Cmd)
+
+                        $row.to_dev = $parsed_data.to_dev
+                        if ($resolved) {
+                            $row.DeviceName = $scsiluns.($parsed_data.to_dev)
+                            $row.DatastoreName = $vmfsextents.($parsed_data.to_dev)
                         }
-                        $row."HostCode" = $hoststatuscodes.($str_tmp[14] -replace "^H:","")
-                        $row."DeviceCode" = $devstatuscodes.($str_tmp[15] -replace "^D:","")
-                        $row."PlugInCode" = $pluginstatuscodes.($str_tmp[16] -replace "^P:","")
-                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -in "Valid","Possible") ) {
-                            $row."SenseKey" = $sensekeys.($str_tmp[20])
-                            $row."SenseData" = $sensedata.($str_tmp[21] + "/" + ($str_tmp[22] -replace "\.$",""))
+
+                        $row.on_path = $parsed_data.on_path
+                        if ($resolved) { $row.StorageAdapterName = $vmhbas.(($parsed_data.on_path -split ":")[0]) }
+
+                        $row.HostDevicePlugInCode = $parsed_data.HostDevicePlugInCode
+                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split " H:")[1] -split " ")[0])
+                        $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
+                        $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
+
+                        $row.SenseDataValidity = $parsed_data.SenseDataValidity
+                        $row.SenseData = $parsed_data.SenseData
+                        if ( ($parsed_data.SenseDataValidity -in "Valid","Possible") ) {
+                            $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
+                            $row."AdditionalSenseData" = $additionalsensedata.("{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[1] + "/" + "{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[2])
                         }
-                        $row."Action" = $str_tmp[23] -replace "^Act:",""
+                        $row."Action" = $parsed_data.Action
+
                         $result += $row
                     }
-                    break;
+                    break
                 }
 
-                # SCSI device I/O
-                "cpu\d+:\d+\)ScsiDeviceIO:\ \d+:\ Cmd" {
-                    $str_tmp = $_ -split " "
-                    $timestamp = [datetime]$str_tmp[0]
-
+                # SCSI Device I/O
+                "cpu\d+:\d+.*\)ScsiDeviceIO:\ \d+:\ Cmd" {
+                    # Process only if the log entry is in valid time range
+                    $timestamp = [DateTime]($_ -split " ")[0]
                     if ( ($timestamp -ge $Start) -and ($timestamp -le $Finish) ) {
-                        $row = "" | Select-Object "Timestamp", "LogType", "Cmd", "WorldFrom", "DeviceTo", "OnPath", "HostCode", "DeviceCode", "PlugInCode", "SenseKey", "SenseData", "Action"
-                        $row."Timestamp" = [datetime]$str_tmp[0]
-                        $row."LogType" = "ScsiDeviceIO"
-                        $row."Cmd" = $opnums.($str_tmp[4] -replace ",$","")
-                        $worldid = $str_tmp[9]
-                        if (($Resolve -eq $true) -and ($resolved -eq $true) -and ($worldids.$worldid -ne $null)) {
-                            $row."WorldFrom" = $worldids.$worldid
-                        } else {
-                            $row."WorldFrom" = $worldid
+                        $parsed_data = @{
+                            "Cmd" = (($_ -split "Cmd\(.*\) ")[1] -split ",")[0]
+                            "from_world" = (($_ -split "from world ")[1] -split " ")[0]
+                            "to_dev" = (($_ -split "to dev ")[1] -split " ")[0] -replace "`"",""
+                            "HostDevicePlugInCode" = ([regex]"H:\d+x\d+ D:\d+x\d+ P:\d+x\d+").Match($_).Value
+                            "SenseDataValidity" = (($_ -split " sense data:")[0] -split " ")[-1]
+                            "SenseData" = ([regex]"sense data: 0x[0-9a-f]+ 0x[0-9a-f]+ 0x[0-9a-f]+").Match($_).Value -replace "sense data: ",""
                         }
-                        $scsilun = $str_tmp[12] -replace "`"",""
-                        if (($Resolve -eq $true) -and ($resolved -eq $true) -and ($scsiluns.$scsilun -ne $null)) {
-                            $row."DeviceTo" = $scsiluns.$scsilun
-                            if ($vmfsextents.$scsilun -ne $null) {
-                                $row."DeviceTo" += " (" + ($vmfsextents.$scsilun -split " ")[-1] + ")"
-                            }
-                        } else {
-                            $row."DeviceTo" = $scsilun
-                        }
-                        $row."HostCode" = $hoststatuscodes.($str_tmp[14] -replace "^H:","")
-                        $row."DeviceCode" = $devstatuscodes.($str_tmp[15] -replace "^D:","")
-                        $row."PlugInCode" = $pluginstatuscodes.($str_tmp[16] -replace "^P:","")
 
-                        if ( ($str_tmp.Count -gt 17) -and ($str_tmp[17] -in "Valid","Possible") ) {
-                            $row."SenseKey" = $sensekeys.($str_tmp[20])
-                            $row."SenseData" = $sensedata.($str_tmp[21] + "/" + ($str_tmp[22] -replace "\.$",""))
+                        $row = "" | Select-Object "Id", "Timestamp", "LogType", "Cmd", "OperationCode", "from_world", "WorldName", "to_dev", "DeviceName", "DatastoreName", "on_path", "StorageAdapterName", "HostDevicePlugInCode", "HostStatus", "DeviceStatus", "PlugInStatus", "SenseDataValidity", "SenseData", "SenseKey", "AdditionalSenseData", "Action"
+                        $row.Id = $id++
+                        $row.Timestamp = $timestamp
+                        $row.LogType = "ScsiDeviceIO"
+
+                        $row.Cmd = $parsed_data.Cmd
+                        $row.OperationCode = $opnums.("{0:X2}" -f [Int]$parsed_data.Cmd)
+
+                        $row.from_world =  $parsed_data.from_world
+                        if ($resolved) { $row.WorldName = $worldids.($parsed_data.from_world) }
+
+                        $row.to_dev = $parsed_data.to_dev
+                        if ($resolved) {
+                            $row.DeviceName = $scsiluns.($parsed_data.to_dev)
+                            $row.DatastoreName = $vmfsextents.($parsed_data.to_dev)
+                        }
+
+                        $row.HostDevicePlugInCode = $parsed_data.HostDevicePlugInCode
+                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split " H:")[1] -split " ")[0])
+                        $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
+                        $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
+
+                        $row.SenseDataValidity = $parsed_data.SenseDataValidity
+                        $row.SenseData = $parsed_data.SenseData
+                        if ( ($parsed_data.SenseDataValidity -in "Valid","Possible") ) {
+                            $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
+                            $row."AdditionalSenseData" = $additionalsensedata.("{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[1] + "/" + "{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[2])
                         }
                         $result += $row
                     }
-                    break;
+                    break
+                }
+
+                Default {
+
                 }
             }
         }
-        $result
+    }
+
+    End {
+        return $result
     }
 }
 
@@ -367,31 +354,42 @@ Function ConvertFrom-SCSICode {
 <#
 .SYNOPSIS
     Converts SCSI Sense Code to human readable format
+
 .DESCRIPTION
     This Cmdlet translates SCSI Codes to human readable form.
         - Based on T10 standard documents (http://www.t10.org)
-        - Cmd (Op-Code) / Host Code / Device Code / PlugIn Code / Sense Key / Sense Data
+        - Cmd (Operation Code) / Host Code / Device Code / PlugIn Code / Sense Key / Additional Sense Data
+
 .PARAMETER CodeType
-    Specifies SCSI code type. The valid choices are Cmd, HostCode, DeviceCode, PlugInCode, SenseKey and SenseData.
+    Specifies SCSI code type. The valid choices are Cmd, HostCode, DeviceCode, PlugInCode, SenseKey and AdditionalSenseData.
 .PARAMETER Value
     Specifies SCSI code value to translate.
+
 .EXAMPLE
-    ConvertFrom-SCSICode -CodeType Cmd -Value '0x9e'
+    ConvertFrom-SCSICode -CodeType Cmd -Value 0x1a
 .EXAMPLE
-    ConvertFrom-SCSICode -CodeType SenseData -Value '0x1d 0x0'
+    ConvertFrom-SCSICode -CodeType HostCode -Value 0x5
+.EXAMPLE
+    ConvertFrom-SCSICode DeviceCode 0x28
+.EXAMPLE
+    ConvertFrom-SCSICode PlugInCode 0x2
+.EXAMPLE
+    ConvertFrom-SCSICode SenseKey 0x3
+.EXAMPLE
+    ConvertFrom-SCSICode AdditionalSenseData "0x1d 0x0"
 
 .NOTES
     Author                      : Han Ho-Sung
     Author email                : funksoul@insdata.co.kr
-    Version                     : 1.0
+    Version                     : 1.1
     Dependencies                : 
     ===Tested Against Environment====
-    ESXi Version                : 6.0.0
-    PowerCLI Version            : VMware PowerCLI 6.5 Release 1 build 4624819
-    PowerShell Version          : 5.1.14393.693
+    ESXi Version                : 6.0
+    PowerCLI Version            : VMware PowerCLI 6.5.2
+    PowerShell Version          : 5.1.15063.502
 #>
     Param (
-        [Parameter(Mandatory=$true, Position=0)][ValidateSet("Cmd", "HostCode", "DeviceCode", "PlugInCode", "SenseKey", "SenseData")]$CodeType,
+        [Parameter(Mandatory=$true, Position=0)][ValidateSet("Cmd", "HostCode", "DeviceCode", "PlugInCode", "SenseKey", "AdditionalSenseData")]$CodeType,
         [Parameter(Mandatory=$true, Position=1)][String]$Value
     )
 
@@ -409,18 +407,39 @@ Function ConvertFrom-SCSICode {
         $CsvFileList["DeviceCode"] = "dev-status-codes.csv"
         $CsvFileList["PlugInCode"] = "plugin-status-codes-esxi5x-60.csv"
         $CsvFileList["SenseKey"] = "sense-keys.csv"
-        $CsvFileList["SenseData"] = "asc-num.csv"
+        $CsvFileList["AdditionalSenseData"] = "asc-num.csv"
 
         $ModuleBase = Split-Path $script:MyInvocation.MyCommand.Path
         $CsvFilePath = Join-Path -Path $ModuleBase -ChildPath $CsvFileList.$CodeType
         $CodeTable = Import-Csv -Path $CsvFilePath | ArrayToHash
-        # Additional Sense Data can be in the form of 'ASC/ASCQ' or 'ASC ASCQ'
-        $result = $CodeTable.($Value -replace ' ','/')
 
-        if ($result -ne $null) {
-            return $result
-        } else {
-            Write-Verbose "Decode Failed"
+        Switch ($CodeType) {
+            "Cmd" {
+                $result = $CodeTable.("{0:X2}" -f [Int]$Value)
+                break
+            }
+            "HostCode" {
+                $result = $CodeTable.("0x{0:x2}" -f [Int]$Value)
+                break
+            }
+            "DeviceCode" {
+                $result = $CodeTable.("{0:x2}h" -f [Int]$Value)
+                break
+            }
+            "PlugInCode" {
+                $result = $CodeTable.($Value)
+                break
+            }
+            "SenseKey" {
+                $result = $CodeTable.("{0:X}h" -f [Int]$Value)
+                break
+            }
+            "AdditionalSenseData" {
+                $result = $CodeTable.("{0:X2}h" -f [Int]($Value -split " ")[0] + "/" + "{0:X2}h" -f [Int]($Value -split " ")[1])
+                break
+            }
         }
+        if ($result -ne $null) { return $result }
+        else { Write-Verbose "Decode Failed" }
     }
 }
