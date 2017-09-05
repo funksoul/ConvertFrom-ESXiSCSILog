@@ -15,7 +15,7 @@ For more information, please consult the help page of each Cmdlet.
 3. Check if the module loaded correctly
 
 ```powershell
-PS C:\> Get-Module ConvertFrom-ESXiSCSILog
+PS C:\> Get-Module -ListAvailable ConvertFrom-ESXiSCSILog
 
 ModuleType Version    Name                                ExportedCommands
 ---------- -------    ----                                ----------------
@@ -34,23 +34,36 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
   ```
   === Sample Output ===
-  Timestamp  : 2016-12-22 PM 1:01:01
-  LogType    : nmp_ThrottleLogForDevice
-  Cmd        : SERVICE ACTION IN(16)
-  WorldFrom  :
-  DeviceTo   : naa.50000f000b600d0b
-  OnPath     : vmhba2:C0:T0:L0
-  HostCode   : NO error
-  DeviceCode : CHECK CONDITION
-  PlugInCode : No error.
-  SenseKey   : ILLEGAL REQUEST
-  SenseData  : INVALID COMMAND OPERATION CODE
-  Action     : NONE 
+  Id                   : 664
+  Timestamp            : 2017-02-08 AM 12:35:05
+  LogType              : nmp_ThrottleLogForDevice
+  Cmd                  : 0xf1
+  OperationCode        : ATOMIC TEST AND SET (EMC VMAX/VNX, IBM Storwize)
+  from_world           :
+  WorldName            :
+  to_dev               : naa.6006016006902c008d9626e54f85e111
+  DeviceName           : 
+  DatastoreName        : 
+  on_path              : vmhba3:C0:T1:L1
+  StorageAdapterName   : 
+  HostDevicePlugInCode : H:0x0 D:0x2 P:0x0
+  HostStatus           : NO error
+  DeviceStatus         : CHECK CONDITION
+  PlugInStatus         : No error.
+  SenseDataValidity    : Valid
+  SenseData            : 0xe 0x1d 0x0
+  SenseKey             : MISCOMPARE
+  AdditionalSenseData  : MISCOMPARE DURING VERIFY OPERATION
+  Action               : NONE
+
+  Id                   : 665
+  Timestamp            : 2017-02-08 AM 12:35:06
+  ...
   ```
 
 
 
-* Translate SCSI Codes and ESXi Host Data
+* Translate SCSI Codes and ESXi Host Data (You need to be connected to a vCenter Server)
 
   ```powershell
   PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com
@@ -58,42 +71,31 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
   ```
   === Sample Output ===
-  Timestamp  : 2016-12-22 PM 1:01:01
-  LogType    : nmp_ThrottleLogForDevice
-  Cmd        : SERVICE ACTION IN(16)
-  WorldFrom  :
-  DeviceTo   : ATA - SAMSUNG HE160HJ (LOCAL-COMPUTE01-01)
-  OnPath     : Dell SAS 5/iR Adapter / Ctlr 0 Tgt 0 LUN 0
-  HostCode   : NO error
-  DeviceCode : CHECK CONDITION
-  PlugInCode : No error.
-  SenseKey   : ILLEGAL REQUEST
-  SenseData  : INVALID COMMAND OPERATION CODE
-  Action     : NONE
-  ```
+  Id                   : 664
+  Timestamp            : 2017-02-08 AM 12:35:05
+  LogType              : nmp_ThrottleLogForDevice
+  Cmd                  : 0xf1
+  OperationCode        : ATOMIC TEST AND SET (EMC VMAX/VNX, IBM Storwize)
+  from_world           :
+  WorldName            :
+  to_dev               : naa.6006016006902c008d9626e54f85e111
+  DeviceName           : DGC VRAID
+  DatastoreName        : VNX5100-01
+  on_path              : vmhba3:C0:T1:L1
+  StorageAdapterName   : QLogic Corp ISP2432-based 4Gb Fibre Channel to PCI Express HBA
+  HostDevicePlugInCode : H:0x0 D:0x2 P:0x0
+  HostStatus           : NO error
+  DeviceStatus         : CHECK CONDITION
+  PlugInStatus         : No error.
+  SenseDataValidity    : Valid
+  SenseData            : 0xe 0x1d 0x0
+  SenseKey             : MISCOMPARE
+  AdditionalSenseData  : MISCOMPARE DURING VERIFY OPERATION
+  Action               : NONE
 
-
-
-* Output both of raw and translated data
-
-  ```powershell
-  PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -OutFormat Combined -Resolve -Server vmhost.example.com
-  ```
-
-  ```
-  === Sample Output ===
-  Timestamp  : 2016-12-22 AM 3:10:17
-  LogType    : ScsiDeviceIO
-  Cmd        : 0x89 COMPARE AND WRITE
-  WorldFrom  : 24822716 sdrsInjector
-  DeviceTo   : naa.6001405a6c5bb67b44c4af59a3466fcd LIO-ORG - disk01
-  OnPath     :
-  HostCode   : 0x0 NO error
-  DeviceCode : 0x2 CHECK CONDITION
-  PlugInCode : 0x0 No error.
-  SenseKey   : 0xe MISCOMPARE
-  SenseData  : 0x1d/0x0 MISCOMPARE DURING VERIFY OPERATION
-  Action     :
+  Id                   : 665
+  Timestamp            : 2017-02-08 AM 12:35:06
+  ...
   ```
 
 
@@ -109,7 +111,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Translate a SCSI Sense Data
 
   ```powershell
-  PS C:\> ConvertFrom-SCSICode -CodeType SenseData -Value '0x1d/0x0'
+  PS C:\> ConvertFrom-SCSICode AdditionalSenseData "0x1d 0x0"
   ```
 
 

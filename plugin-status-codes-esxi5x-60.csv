@@ -8,4 +8,3 @@
 "0x6","Allocating more thin provision space. Device server is in the process of allocating more space in the backing pool for a thin provisioned LUN."
 "0x7","Thin provisioning soft-limit exceeded."
 "0x8","Backing pool for thin provisioned LUN is out of space."
-
