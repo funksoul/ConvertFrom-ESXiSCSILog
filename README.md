@@ -2,8 +2,8 @@
 ConvertFrom-ESXiSCSILog
 =======================
 
-A PowerShell Module converts SCSI Sense Code from ESXi vmkernel.log to human readable format.
-This module also contains ConvertFrom-SCSICode which converts SCSI Sense Code.
+A PowerShell Module converts SCSI Sense Code from ESXi vmkernel.log to human readable format.  
+This module also contains ConvertFrom-SCSICode which converts SCSI Sense Code.  
 For more information, please consult the help page of each Cmdlet.
 
 
