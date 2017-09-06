@@ -1,6 +1,5 @@
 
-ConvertFrom-ESXiSCSILog
-=======================
+# ConvertFrom-ESXiSCSILog
 
 A PowerShell Module converts SCSI Sense Code from ESXi vmkernel.log to human readable format.  
 This module also contains ConvertFrom-SCSICode which converts SCSI Sense Code.  
@@ -8,7 +7,7 @@ For more information, please consult the help page of each Cmdlet.
 
 
 
-###Installation###
+### Installation
 
 1. Download repo as .zip file and extract it.
 2. Change location to the extracted folder and run the installer (.\Install.ps1)
@@ -24,7 +23,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
 
 
-###Usage###
+### Usage
 
 * Using default parameters (Translate SCSI Codes only)
 
@@ -116,6 +115,6 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
 
 
-###Etc###
+### Etc
 
 * An UTC timestamp field of vmkernel.log entry is converted to DateTime object and displayed in localtime.
