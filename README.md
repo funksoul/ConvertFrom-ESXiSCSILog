@@ -28,7 +28,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Using default parameters (Translate SCSI Codes only)
 
   ```powershell
-  PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog
+  PS C:\> Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog
   ```
 
   ```
@@ -65,7 +65,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Translate SCSI Codes and ESXi Host Data (You need to be connected to a vCenter Server)
 
   ```powershell
-  PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com
+  PS C:\> Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com
   ```
 
   ```
@@ -102,7 +102,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Translate SCSI Codes and ESXi Host Data using cached .csv files (offline)
 
   ```powershell
-  Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -UseCache
+  Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -UseCache
   ```
 
 
@@ -110,7 +110,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Use files extracted from vm-support bundle to retrieve ESXi Host Data
 
   ```powershell
-  Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
+  Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
   ```
 
 
@@ -118,7 +118,7 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 * Translate from 2017/01/01 (to now)
 
   ```powershell
-  PS C:\> Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com -Start 2017/01/01
+  PS C:\> Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -Start 2017/01/01
   ```
 
 
