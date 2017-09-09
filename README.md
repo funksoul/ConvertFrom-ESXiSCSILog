@@ -99,6 +99,22 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
 
 
+* Translate SCSI Codes and ESXi Host Data using cached .csv files (offline)
+
+  ```powershell
+  Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -UseCache
+  ```
+
+
+
+* Use files extracted from vm-support bundle to retrieve ESXi Host Data
+
+  ```powershell
+  Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
+  ```
+
+
+
 * Translate from 2017/01/01 (to now)
 
   ```powershell

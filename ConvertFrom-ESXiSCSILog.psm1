@@ -19,14 +19,14 @@ Function ConvertFrom-ESXiSCSILog {
 
 .PARAMETER InputObject
     An array of strings which are read from vmkernel.log file.
-.PARAMETER Resolve
-    Determines whether translate ESXi Host Data or not.
-    Used in conjunction with 'Server' parameter.
-.PARAMETER UseCache
-    Use cached(offline) version of ESXi Host Data when 'Resolve' parameter is $true.
-    Caches are saved as .csv files to $env:TMP or /tmp directory depend on the PowerShell Edition.
 .PARAMETER Server
-    Specifies ESXi Host to contact to retrieve data.
+    Specifies ESXi Host to contact to retrieve data such as datastore name, HBA name.
+    * Retrieved data will be cached as .csv files in $Env:TMP or /tmp directory.
+.PARAMETER UseCache
+    Use cached version of ESXi Host Data when 'Server' parameter is used (offline).
+.PARAMETER VMSupport
+    Use files extracted from vm-support bundle to retrieve ESXi Host Data.
+    You should use either parameter 'VMSupport' or 'Server'.
 .PARAMETER Start
     Specifies the start date of the log you want to retrieve. The valid formats depend on the local machine regional settings.
 .PARAMETER Finish
@@ -64,7 +64,7 @@ Function ConvertFrom-ESXiSCSILog {
     ...
 
 .EXAMPLE
-    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com
+    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com
     Translate SCSI Codes and ESXi Host Data (You need to be connected to a vCenter Server)
 
     === Sample Output ===
@@ -95,7 +95,15 @@ Function ConvertFrom-ESXiSCSILog {
     ...
 
 .EXAMPLE
-    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Resolve -Server vmhost.example.com -Start 2017/01/01
+    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -UseCache
+    Translate SCSI Codes and ESXi Host Data using cached .csv files (offline)
+
+.EXAMPLE
+    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
+    Use files extracted from vm-support bundle to retrieve ESXi Host Data
+
+.EXAMPLE
+    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -Start 2017/01/01
     Translate from 2017/01/01 (to now)
 
 .NOTES
@@ -108,11 +116,12 @@ Function ConvertFrom-ESXiSCSILog {
     PowerCLI Version            : VMware PowerCLI 6.5.2
     PowerShell Version          : 5.1.15063.502
 #>
+    [CmdletBinding(DefaultParameterSetName="All")]
     Param (
         [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)][AllowEmptyString()][String[]]$InputObject,
-        [Parameter(Mandatory=$false)][switch]$Resolve = $false,
-        [Parameter(Mandatory=$false)][switch]$UseCache = $false,
-        [Parameter(Mandatory=$false)][PSObject]$Server,
+        [Parameter(Mandatory=$false, ParameterSetName="Server")][PSObject]$Server,
+        [Parameter(Mandatory=$false, ParameterSetName="Server")][Switch]$UseCache,
+        [Parameter(Mandatory=$false, ParameterSetName="VMSupport")][String]$VMSupport,
         [Parameter(Mandatory=$false)][DateTime]$Start = (Get-Date 0),
         [Parameter(Mandatory=$false)][DateTime]$Finish = (Get-Date)
     )
@@ -134,7 +143,7 @@ Function ConvertFrom-ESXiSCSILog {
         }
 
         # Contact VMHost in order to fetch details of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents
-        if ($Resolve) {
+        if ($Server) {
             if ($PSVersionTable.PSEdition -eq 'Desktop') { $tmppath = $Env:TMP }
             else { $tmppath = "/tmp" }
 
@@ -171,9 +180,9 @@ Function ConvertFrom-ESXiSCSILog {
 
                     Write-Verbose "Fetching list of VMFS Datastore Extents.."
                     $vmfsextents = @()
-                    Get-Datastore -RelatedObject $VMHost | %{ $_.ExtensionData.Info.Vmfs | Select-Object Extent, Name } | %{
+                    Get-Datastore -RelatedObject $VMHost | ForEach-Object { $_.ExtensionData.Info.Vmfs | Select-Object Extent, Name } | ForEach-Object {
                         $VmfsName = $_.Name
-                        $_.Extent | %{
+                        $_.Extent | ForEach-Object {
                             $row = "" | Select-Object "Code", "Description"
                             $row.Code = $_.DiskName
                             $row.Description = $VmfsName
@@ -188,7 +197,6 @@ Function ConvertFrom-ESXiSCSILog {
                 Catch {
                     Write-Host "Could not contact VMHost `"$Server`". Resolving WorldName/DeviceName/DatastoreName/StorageAdapterName would fail."
                     Write-Error $_
-                    $VMHost = $Server
 
                     $resolved = $false
                 }
@@ -208,6 +216,8 @@ Function ConvertFrom-ESXiSCSILog {
                     }
 
                     Write-Verbose "Reading list of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents from cache.."
+                    $message = "(" + (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_*.csv")) + ")"
+                    Write-Verbose $message
                     $worldids = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_worldids.csv")) | ArrayToHash
                     $vmhbas = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_vmhbas.csv")) | ArrayToHash
                     $scsiluns = Import-Csv -Path (Join-Path -Path $tmppath -ChildPath ("cache_" + $VMHost + "_scsiluns.csv")) | ArrayToHash
@@ -219,10 +229,31 @@ Function ConvertFrom-ESXiSCSILog {
                     Write-Host "Reading from cache failed. Resolving WorldName/DeviceName/StorageAdapterName would fail."
                     Write-Host "Please check ${tmppath}cache_${Server}_*.csv files."
                     Write-Verbose $_
-                    $VMHost = $Server
 
                     $resolved = $false
                 }
+            }
+        }
+
+        if ($VMSupport) {
+            $commandspath = Join-Path $VMSupport -ChildPath "commands"
+            Try {
+                Write-Verbose "Reading list of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents from vm-support bundle.."
+                $message = "(" + (Join-Path -Path $commandspath -ChildPath "*.txt") + ")"
+                Write-Verbose $message
+                $worldids = Get-Content -Path (Join-Path $commandspath -ChildPath "ps_-cPTgjstz.txt") | ConvertFrom-String | Select-Object @{Name="Code";Expression={[String]$_.P1}}, @{Name="Description";Expression={$_.P3}} | ArrayToHash
+                $vmhbas = Get-Content -Path (Join-Path $commandspath -ChildPath "localcli_storage-core-adapter-list.txt") | ConvertFrom-String -Delimiter "\(.*\) " | Select-Object @{Name="Code";Expression={$_.P1 -replace "\s+.+$",""}}, @{Name="Description";Expression={$_.P2}} | ArrayToHash
+                $scsiluns = Get-Content -Path (Join-Path $commandspath -ChildPath "esxcfg-mpath_-b.txt") | Where-Object { $_ -notmatch "^\ +vmhba|^$" } | ConvertFrom-String -Delimiter " : " -PropertyNames Code, Description | ArrayToHash
+                $vmfsextents = Get-Content -Path (Join-Path $commandspath -ChildPath "esxcfg-scsidevs_-m.txt") | ConvertFrom-String | Select-Object @{Name="Code";Expression={$_.P1 -replace ":\d*$",""}}, @{Name="Description";Expression={$_.P5}} | ArrayToHash
+
+                $resolved = $true
+            }
+            Catch {
+                Write-Host "Reading from cache failed. Resolving WorldName/DeviceName/StorageAdapterName would fail."
+                Write-Host "Please check ${commandspath}*.txt files."
+                Write-Verbose $_
+
+                $resolved = $false
             }
         }
 
@@ -339,7 +370,7 @@ Function ConvertFrom-ESXiSCSILog {
                 }
 
                 Default {
-
+                    # Do nothing
                 }
             }
         }
