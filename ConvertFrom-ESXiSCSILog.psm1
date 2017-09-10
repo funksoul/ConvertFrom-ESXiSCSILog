@@ -17,6 +17,9 @@ Function ConvertFrom-ESXiSCSILog {
             . Retrieved using PowerCLI Cmdlets
             . World (Process) Id / Target Device Name / Datastore Name / Storage Adapter Name
 
+.PARAMETER VMSupport
+    Use files extracted from vm-support bundle to read vmkernel log archive and ESXi Host Data.
+    (This is vm-support bundle batch processing mode and you cannot use InputObject parameter in this mode.)
 .PARAMETER InputObject
     An array of strings which are read from vmkernel.log file.
 .PARAMETER Server
@@ -24,9 +27,6 @@ Function ConvertFrom-ESXiSCSILog {
     * Retrieved data will be cached as .csv files in $Env:TMP or /tmp directory.
 .PARAMETER UseCache
     Use cached version of ESXi Host Data when 'Server' parameter is used (offline).
-.PARAMETER VMSupport
-    Use files extracted from vm-support bundle to retrieve ESXi Host Data.
-    You should use either parameter 'VMSupport' or 'Server'.
 .PARAMETER Start
     Specifies the start date of the log you want to retrieve. The valid formats depend on the local machine regional settings.
 .PARAMETER Finish
@@ -99,8 +99,9 @@ Function ConvertFrom-ESXiSCSILog {
     Translate SCSI Codes and ESXi Host Data using cached .csv files (offline)
 
 .EXAMPLE
-    Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
-    Use files extracted from vm-support bundle to retrieve ESXi Host Data
+    ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
+    Use files extracted from vm-support bundle to read vmkernel log archive and ESXi Host Data.
+    (This is vm-support bundle batch processing mode and you cannot use InputObject parameter in this mode.)
 
 .EXAMPLE
     Get-Content -Path vmkernel.log | ConvertFrom-ESXiSCSILog -Server vmhost.example.com -Start 2017/01/01
@@ -118,10 +119,10 @@ Function ConvertFrom-ESXiSCSILog {
 #>
     [CmdletBinding(DefaultParameterSetName="All")]
     Param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)][AllowEmptyString()][String[]]$InputObject,
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName="VMSupport")][String]$VMSupport,
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName="Server", ValueFromPipeline=$true)][AllowEmptyString()][String[]]$InputObject,
         [Parameter(Mandatory=$false, ParameterSetName="Server")][PSObject]$Server,
         [Parameter(Mandatory=$false, ParameterSetName="Server")][Switch]$UseCache,
-        [Parameter(Mandatory=$false, ParameterSetName="VMSupport")][String]$VMSupport,
         [Parameter(Mandatory=$false)][DateTime]$Start = (Get-Date 0),
         [Parameter(Mandatory=$false)][DateTime]$Finish = (Get-Date)
     )
@@ -129,6 +130,9 @@ Function ConvertFrom-ESXiSCSILog {
     Begin {
         $result = @()
         $ModuleBase = Split-Path $script:MyInvocation.MyCommand.Path
+
+        if ($PSVersionTable.PSEdition -eq 'Desktop') { $tmppath = $Env:TMP }
+        else { $tmppath = "/tmp" }
 
         # Skip HTTPS certificates validation on PowerShell Core (https://github.com/PowerShell/PowerShell/pull/2006)
         if ($PSVersionTable.PSEdition -eq 'Core') {
@@ -144,9 +148,6 @@ Function ConvertFrom-ESXiSCSILog {
 
         # Contact VMHost in order to fetch details of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents
         if ($Server) {
-            if ($PSVersionTable.PSEdition -eq 'Desktop') { $tmppath = $Env:TMP }
-            else { $tmppath = "/tmp" }
-
             if (! $UseCache) {
                 Try {
                     # Object-by-Name (OBN) selection of VMHost
@@ -236,7 +237,9 @@ Function ConvertFrom-ESXiSCSILog {
         }
 
         if ($VMSupport) {
+            $varrunlogpath = Join-Path (Join-Path (Join-Path $VMSupport -ChildPath "var") -ChildPath "run") -ChildPath "log"
             $commandspath = Join-Path $VMSupport -ChildPath "commands"
+
             Try {
                 Write-Verbose "Reading list of Worlds, Storage Adapters, SCSI Devices and VMFS Datastore Extents from vm-support bundle.."
                 $message = "(" + (Join-Path -Path $commandspath -ChildPath "*.txt") + ")"
@@ -255,6 +258,29 @@ Function ConvertFrom-ESXiSCSILog {
 
                 $resolved = $false
             }
+
+            Write-Verbose "Reading vmkernel log archive from vm-support bundle.."
+            $message = "(" + (Join-Path -Path $varrunlogpath -ChildPath "vmkernel.*") + ")"
+            Write-Verbose $message
+
+            Get-ChildItem -Path $varrunlogpath -Name "vmkernel.*.gz" | Sort-Object -Descending | ForEach-Object {
+                $infile = New-Object System.IO.FileStream ($_.PSPath -replace "^Microsoft\..+FileSystem::", ""), ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read)
+                $outfile = New-Object System.IO.FileStream (Join-Path $tmppath -ChildPath ($_.PSChildName -replace "\.gz$","")), ([IO.FileMode]::Create), ([IO.FileAccess]::Write), ([IO.FileShare]::None)
+                $gzipstream = New-Object System.IO.Compression.GZipStream $infile, ([IO.Compression.CompressionMode]::Decompress)
+                $buffer = New-Object byte[](1024)
+                do {
+                    $read = $gzipstream.Read($buffer, 0, 1024)
+                    $outfile.Write($buffer, 0, $read)
+                } until ($read -le 0)
+                $gzipstream.Close()
+                $infile.Close()
+                $outfile.Close()
+
+                $InputObject += Get-Content $outfile.Name
+                Remove-Item -Path $outfile.Name
+
+            }
+            $InputObject += Get-Content (Join-Path $varrunlogpath -ChildPath "vmkernel.log")
         }
 
         $opnums = Import-Csv -Path (Join-Path -Path $ModuleBase -ChildPath 'op-num.csv') | ArrayToHash

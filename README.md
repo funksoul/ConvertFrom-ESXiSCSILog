@@ -107,10 +107,11 @@ Script     0.0        ConvertFrom-ESXiSCSILog             {ConvertFrom-ESXiSCSIL
 
 
 
-* Use files extracted from vm-support bundle to retrieve ESXi Host Data
+* Use files extracted from vm-support bundle to read vmkernel log archive and ESXi Host Data.  
+  (This is vm-support bundle batch processing mode and you cannot use InputObject parameter in this mode.)
 
   ```powershell
-  Get-Content vmkernel.log | ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
+  ConvertFrom-ESXiSCSILog -VMSupport .\esx-vmhost-2017-09-06--00.38
   ```
 
 
