@@ -331,7 +331,7 @@ Function ConvertFrom-ESXiSCSILog {
                         if ($resolved) { $row.StorageAdapterName = $vmhbas.(($parsed_data.on_path -split ":")[0]) }
 
                         $row.HostDevicePlugInCode = $parsed_data.HostDevicePlugInCode
-                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split " H:")[1] -split " ")[0])
+                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split "H:")[1] -split " ")[0])
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
@@ -380,7 +380,7 @@ Function ConvertFrom-ESXiSCSILog {
                         }
 
                         $row.HostDevicePlugInCode = $parsed_data.HostDevicePlugInCode
-                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split " H:")[1] -split " ")[0])
+                        $row.HostStatus = $hoststatuscodes.("0x{0:x2}" -f [Int](($parsed_data.HostDevicePlugInCode -split "H:")[1] -split " ")[0])
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
