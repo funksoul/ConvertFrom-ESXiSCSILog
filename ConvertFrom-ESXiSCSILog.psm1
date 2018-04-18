@@ -384,9 +384,9 @@ Function ConvertFrom-ESXiSCSILog {
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
-                        $row.SenseDataValidity = $parsed_data.SenseDataValidity
-                        $row.SenseData = $parsed_data.SenseData
                         if ( ($parsed_data.SenseDataValidity -in "Valid","Possible") ) {
+                            $row."SenseDataValidity" = $parsed_data.SenseDataValidity
+                            $row."SenseData" = $parsed_data.SenseData
                             $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
                             $row."AdditionalSenseData" = $additionalsensedata.("{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[1] + "/" + "{0:X2}h" -f [Int]($parsed_data.SenseData -split " ")[2])
                         }
