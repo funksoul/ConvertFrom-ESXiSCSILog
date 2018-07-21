@@ -302,7 +302,7 @@ Function ConvertFrom-ESXiSCSILog {
                 "cpu\d+:\d+.*\)NMP:\ nmp_ThrottleLogForDevice:\d+:\ Cmd" {
                     # Process only if the log entry is in valid time range
                     $timestamp = [DateTime]($_ -split " ")[0]
-                    if ( ($timestamp -ge $Start) -and ($timestamp -le $Finish) ) {
+                    if (($timestamp -ge $Start) -and ($timestamp -le $Finish)) {
                         $parsed_data = @{
                             "Cmd" = (($_ -split "Cmd ")[1] -split " ")[0]
                             "to_dev" = (($_ -split "to dev ")[1] -split " ")[0] -replace "`"",""
@@ -335,7 +335,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
-                        if ( ($parsed_data.SenseDataValidity -in "Valid","Possible") ) {
+                        if (($parsed_data.SenseDataValidity -in "Valid","Possible")) {
                             $row."SenseDataValidity" = $parsed_data.SenseDataValidity
                             $row."SenseData" = $parsed_data.SenseData
                             $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
@@ -352,7 +352,7 @@ Function ConvertFrom-ESXiSCSILog {
                 "cpu\d+:\d+.*\)ScsiDeviceIO:\ \d+:\ Cmd" {
                     # Process only if the log entry is in valid time range
                     $timestamp = [DateTime]($_ -split " ")[0]
-                    if ( ($timestamp -ge $Start) -and ($timestamp -le $Finish) ) {
+                    if (($timestamp -ge $Start) -and ($timestamp -le $Finish)) {
                         $parsed_data = @{
                             "Cmd" = (($_ -split "Cmd\(.*\) ")[1] -split ",")[0]
                             "from_world" = (($_ -split "from world ")[1] -split " ")[0]
@@ -384,7 +384,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
-                        if ( ($parsed_data.SenseDataValidity -in "Valid","Possible") ) {
+                        if (($parsed_data.SenseDataValidity -in "Valid","Possible")) {
                             $row."SenseDataValidity" = $parsed_data.SenseDataValidity
                             $row."SenseData" = $parsed_data.SenseData
                             $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
