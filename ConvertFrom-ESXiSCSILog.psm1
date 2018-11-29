@@ -307,7 +307,7 @@ Function ConvertFrom-ESXiSCSILog {
                             "Cmd" = (($_ -split "Cmd ")[1] -split " ")[0]
                             "to_dev" = (($_ -split "to dev ")[1] -split " ")[0] -replace "`"",""
                             "on_path" = (($_ -split "on path ")[1] -split " ")[0] -replace "`"",""
-                            "HostDevicePlugInCode" = ([regex]"H:\d+x\d+ D:\d+x\d+ P:\d+x\d+").Match($_).Value
+                            "HostDevicePlugInCode" = ([regex]"H:0x[0-9a-f]+ D:0x[0-9a-f]+ P:0x[0-9a-f]+").Match($_).Value
                             "SenseDataValidity" = (($_ -split " sense data:")[0] -split " ")[-1]
                             "SenseData" = ([regex]"sense data: 0x[0-9a-f]+ 0x[0-9a-f]+ 0x[0-9a-f]+").Match($_).Value -replace "sense data: ",""
                             "Action" = ($_ -split "Act:")[1]
@@ -335,7 +335,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
-                        if (($parsed_data.SenseDataValidity -in "Valid","Possible")) {
+                        if (($parsed_data.SenseDataValidity -in "Valid","Possible","Invalid")) {
                             $row."SenseDataValidity" = $parsed_data.SenseDataValidity
                             $row."SenseData" = $parsed_data.SenseData
                             $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
@@ -357,7 +357,7 @@ Function ConvertFrom-ESXiSCSILog {
                             "Cmd" = (($_ -split "Cmd\(.*\) ")[1] -split ",")[0]
                             "from_world" = (($_ -split "from world ")[1] -split " ")[0]
                             "to_dev" = (($_ -split "to dev ")[1] -split " ")[0] -replace "`"",""
-                            "HostDevicePlugInCode" = ([regex]"H:\d+x\d+ D:\d+x\d+ P:\d+x\d+").Match($_).Value
+                            "HostDevicePlugInCode" = ([regex]"H:0x[0-9a-f]+ D:0x[0-9a-f]+ P:0x[0-9a-f]+").Match($_).Value
                             "SenseDataValidity" = (($_ -split " sense data:")[0] -split " ")[-1]
                             "SenseData" = ([regex]"sense data: 0x[0-9a-f]+ 0x[0-9a-f]+ 0x[0-9a-f]+").Match($_).Value -replace "sense data: ",""
                         }
@@ -384,7 +384,7 @@ Function ConvertFrom-ESXiSCSILog {
                         $row.DeviceStatus = $devstatuscodes.("{0:x2}h" -f [Int](($parsed_data.HostDevicePlugInCode -split " D:")[1] -split " ")[0])
                         $row.PlugInStatus = $pluginstatuscodes.((($parsed_data.HostDevicePlugInCode -split " P:")[1] -split " ")[0])
 
-                        if (($parsed_data.SenseDataValidity -in "Valid","Possible")) {
+                        if (($parsed_data.SenseDataValidity -in "Valid","Possible","Invalid")) {
                             $row."SenseDataValidity" = $parsed_data.SenseDataValidity
                             $row."SenseData" = $parsed_data.SenseData
                             $row."SenseKey" = $sensekeys.("{0:X}h" -f [Int]($parsed_data.SenseData -split " ")[0])
