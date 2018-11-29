@@ -11,3 +11,5 @@
 "0x09","Got an interrupt we weren't expecting"
 "0x0a","Force command past mid-layer"
 "0x0b","The low level driver wants a retry"
+"0x0c","A transient error. When this status is returned, the I/O command is requeued and issued again."
+"0x0d","the HBA driver tries to abort a command which then sets the IOSTAT_LOCAL_REJECT status on all commands in the iocb ring. This causes the original command to requeue."
